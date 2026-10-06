@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>颜值分析 · 原型图（新版）</title>
+<style>
+  :root{
+    --bg:#f6f0e4; --bg2:#efe6d4; --card:#fffdf8; --line:#e7dcc4; --line2:#d9cba9;
+    --ink:#3b3226; --ink2:#6b5f4b; --muted:#9a8c72;
+    --gold:#b08a3e; --gold2:#c9a24b; --gold-soft:#e9d9b0; --good:#5f8a5b; --demo:#b5563f;
+    --serif:Georgia,"Songti SC","STZhongsong","Noto Serif SC",serif;
+    --sans:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#211c14;color:#eee;font-family:var(--sans);padding:26px 18px 60px}
+  h1{font-size:21px;margin:0 0 4px}
+  .lead{color:#b7ac97;font-size:13px;margin-bottom:18px}
+  .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+  .tabs button{background:#2c251a;color:#e7dcc4;border:1px solid #463a26;border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer}
+  .tabs button.on{background:var(--gold2);color:#2a2110;border-color:var(--gold2);font-weight:600}
+  .stage{display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start}
+  .device{background:#0f0c07;border:1px solid #463a26;border-radius:26px;padding:12px}
+  .device .lb{font-size:11px;color:#8f836a;text-align:center;margin-bottom:8px;letter-spacing:1px}
+  .portrait{width:340px}.landscape{width:760px}
+  .app{background:var(--bg);border-radius:16px;overflow:hidden;color:var(--ink);position:relative;
+    background-image:radial-gradient(700px 300px at 80% -10%,#fbf6ec,transparent)}
+  .hd{display:flex;align-items:center;padding:12px 14px}
+  .brand{font-family:var(--serif);font-size:15px;display:flex;align-items:center;gap:6px}
+  .brand .sp{color:var(--gold2)}
+  .gear{margin-left:auto;background:var(--card);border:1px solid var(--line);color:var(--gold);width:30px;height:30px;border-radius:50%;font-size:14px}
+  .bd{padding:4px 14px 18px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 5px 16px rgba(90,70,30,.08)}
+  .btn{border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+  .btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff}
+  .btn.soft{background:var(--bg2);color:var(--ink)}
+  .btn.line{background:transparent;border:1px solid var(--line2);color:var(--gold)}
+  .btn.wide{width:100%}
+
+  /* home */
+  .home{max-width:340px;margin:0 auto;text-align:center}
+  .drop{background:var(--card);border:1px dashed var(--line2);border-radius:20px;padding:14px;margin-top:4px}
+  .cam{position:relative;border-radius:14px;overflow:hidden;background:#efe7d6}
+  .cam .ph{width:100%;aspect-ratio:3/4;background:radial-gradient(120px 150px at 50% 42%,#d8c6a6,#cbb592 60%,#c2a97f);position:relative}
+  .landscape .cam .ph{aspect-ratio:16/11}
+  .face{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);width:44%;aspect-ratio:3/4;border:2px solid rgba(176,138,62,.6);border-radius:46%}
+  .face::after{content:"正对镜头";position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--gold)}
+  .pickbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;font-size:15px;font-weight:600;padding:13px 34px;border-radius:999px;box-shadow:0 6px 18px rgba(176,138,62,.4)}
+  .rowbtns{display:flex;gap:10px;margin-top:16px}.rowbtns .btn{flex:1}
+  .tip{font-size:11px;color:var(--muted);line-height:1.6;margin-top:12px}
+
+  /* modal */
+  .mask{position:absolute;inset:0;background:rgba(50,40,20,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+  .modal{background:var(--card);border-radius:18px;padding:18px;width:100%;max-width:320px}
+  .modal h3{font-family:var(--serif);margin:0 0 3px;font-size:16px}
+  .modal .sub{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+  .f{margin-bottom:10px}.f label{display:block;font-size:11px;color:var(--ink2);margin-bottom:4px}
+  .f input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--ink);padding:9px 10px;font-size:12px}
+  .mrow{display:flex;gap:8px;margin-top:10px}.mrow .btn{flex:1;padding:10px}
+  .skip{display:block;width:100%;margin-top:10px;background:transparent;border:1px dashed var(--line2);color:var(--muted);border-radius:12px;padding:10px;font-size:12px;cursor:pointer}
+  .lock{font-size:10px;color:var(--muted);line-height:1.5;margin-top:10px;background:var(--bg);border-radius:10px;padding:8px 10px}
+
+  /* loading */
+  .load{position:absolute;inset:0;background:rgba(246,240,228,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:6}
+  .spin{width:52px;height:52px;border-radius:50%;border:4px solid var(--gold-soft);border-top-color:var(--gold)}
+  .scan{width:150px;height:3px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);border-radius:3px}
+  .lt{font-family:var(--serif);font-size:15px;color:var(--gold)}
+  .ls{font-size:11px;color:var(--muted)}
+
+  /* report */
+  .rpt-title{font-family:var(--serif);text-align:center;font-size:17px;letter-spacing:1px;margin:2px 0 10px}
+  .rpt-title .sp{color:var(--gold2)}
+  .demo-badge{display:block;max-width:520px;margin:0 auto 12px;background:var(--demo);color:#fff;text-align:center;
+    font-size:14px;font-weight:700;letter-spacing:1px;padding:9px;border-radius:12px;box-shadow:0 4px 14px rgba(181,86,63,.35)}
+  .demo-badge small{display:block;font-size:10px;font-weight:400;opacity:.9;margin-top:2px;letter-spacing:0}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  .rpt-left,.rpt-right{display:flex;flex-direction:column;gap:12px}
+  .sec-t{font-family:var(--serif);font-size:13px;margin:0 0 10px;display:flex;align-items:center;gap:6px}
+  .sec-t .ic{color:var(--gold2)}
+  .score{text-align:center}
+  .score .lab{font-family:var(--serif);letter-spacing:1px;font-size:10px;color:var(--muted)}
+  .score .big{font-family:var(--serif);font-size:48px;line-height:1;color:var(--gold);margin:4px 0}
+  .score .big small{font-size:15px;color:var(--muted)}
+  .stars{font-size:17px;letter-spacing:2px;color:var(--gold2)}.stars .off{color:var(--gold-soft)}
+  .pill{display:inline-block;background:var(--bg2);color:var(--gold);border-radius:999px;padding:4px 14px;font-size:12px;font-weight:600;margin-top:4px}
+  .qnote{font-size:10px;color:var(--muted);margin-top:8px}
+  .bar-row{margin-bottom:11px}.bar-row .bt{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+  .bar-row .bt b{font-family:var(--serif)}.bar-row .bt span{color:var(--muted);font-size:11px}
+  .track{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden}
+  .track i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold))}
+  .dim-grid{display:grid;grid-template-columns:1fr;gap:10px}
+  .dim{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px;display:flex;flex-direction:column}
+  .dim .h{display:flex;justify-content:space-between;align-items:baseline}
+  .dim .h .nm{font-weight:600;font-size:12px}.dim .h .sc{font-family:var(--serif);font-size:16px;color:var(--gold)}
+  .dim .ln{font-size:11px;line-height:1.6;color:var(--ink2);margin-top:6px}.dim .ln .k{color:var(--gold);font-weight:600}
+  .dim .ln.adv{color:var(--good);margin-top:auto;padding-top:6px}.dim .ln.adv .k{color:var(--good)}
+  .trow{display:flex;gap:10px;padding:8px 0;border-top:1px dashed var(--line)}.trow:first-child{border-top:none}
+  .trow .ti{width:28px;height:28px;border-radius:9px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+  .trow .tx b{display:block;font-size:11px;color:var(--gold)}.trow .tx span{font-size:11px;color:var(--ink2);line-height:1.5}
+  .comment{font-size:11px;line-height:1.7;color:var(--ink2)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.tag{background:var(--bg2);color:var(--gold);border-radius:999px;padding:3px 10px;font-size:10px}
+  .disc{font-size:9px;color:var(--muted);line-height:1.5;margin-top:12px;text-align:center}
+  .pmini{border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .pmini .p{width:100%;aspect-ratio:3/4;background:radial-gradient(120px 150px at 50% 40%,#d8c6a6,#c2a97f)}
+  .ract{display:flex;gap:10px;margin-top:14px}.ract .btn{flex:1}
+
+  /* landscape: two columns, bottoms aligned; LEFT photo absorbs extra height, RIGHT stays natural */
+  .landscape .grid{grid-template-columns:250px 1fr;align-items:stretch}
+  .landscape .rpt-left .pmini{flex:1;display:flex;min-height:0}
+  .landscape .rpt-left .pmini .p{flex:1;width:100%;aspect-ratio:auto;min-height:180px}
+  .landscape .rpt-right{justify-content:flex-start}
+  .landscape .rpt-right>.card{flex:0 0 auto}
+  .landscape .dim-grid{grid-template-columns:1fr 1fr;grid-auto-rows:1fr}
+</style>
+</head>
+<body>
+  <h1>AI 颜值分析 · 原型图（新版）</h1>
+  <div class="lead">暖米金 + 衬线报告风 · 流程「选择 → 分析 → 结果」· 配置弹框含跳过演示 · 横屏两栏底部对齐 · 竖屏 / 横屏</div>
+  <div class="tabs" id="tabs">
+    <button data-s="home" class="on">① 主界面</button>
+    <button data-s="cfg">② 配置弹框（含跳过）</button>
+    <button data-s="load">③ 分析动画</button>
+    <button data-s="report">④ 结果报告</button>
+    <button data-s="demo">⑤ 演示评分（非真实）</button>
+  </div>
+  <div class="stage">
+    <div class="device portrait"><div class="lb">竖屏 PORTRAIT</div><div class="app" id="P"></div></div>
+    <div class="device landscape"><div class="lb">横屏 LANDSCAPE（两栏等高·底部对齐）</div><div class="app" id="L"></div></div>
+  </div>
+
+<script>
+const head=`<div class="hd"><div class="brand"><span class="sp">✦</span> AI 颜值分析 <span class="sp">✦</span></div><div class="gear">⚙</div></div>`;
+
+function home(){return head+`<div class="bd"><div class="home"><div class="drop"><div class="cam"><div class="ph"><div class="face"></div></div><div class="pickbtn">选择</div></div></div>
+  <div class="rowbtns" style="margin-top:16px"><button class="btn gold wide">分析 →</button></div>
+  <div class="tip">点击「选择」调用系统相机拍照或从相册选取。免冠正脸 · 光线均匀 · 无遮挡。照片在本机去除隐私信息后上传，评分由本地计算。</div></div></div>`;}
+
+function cfg(){return `<div style="position:relative">${home()}<div class="mask"><div class="modal"><h3>接口设置</h3>
+  <div class="sub">填写 OpenAI 兼容的多模态接口，用于分项打分。</div>
+  <div class="f"><label>API Base URL</label><input value="https://api.openai.com/v1"></div>
+  <div class="f"><label>API Key</label><input type="password" value="sk-************"></div>
+  <div class="f"><label>模型名称</label><input value="gpt-4o-mini"></div>
+  <div class="mrow"><button class="btn soft">测试连接</button><button class="btn gold">保存</button></div>
+  <button class="skip">跳过 · 体验演示评分（随机结果，非真实）</button>
+  <div class="lock">🔒 仅保存在本机浏览器 localStorage，不上传任何服务器；清除浏览器数据即删除。</div>
+</div></div></div>`;}
+
+function load(){return `<div style="position:relative">${home()}<div class="load"><div class="spin"></div><div class="scan"></div><div class="lt">正在分析中</div><div class="ls">去除隐私信息 · 面部六维评估 · 本地汇总</div></div></div>`;}
+
+const dims=[["面部比例","◱",76,"中庭/下庭≈1.15","中庭略长 -8","镜头上移5-10cm"],
+["对称性","⇄",82,"左眉峰高约2-3mm","眉高差 -6","正对镜头、双肩水平"],
+["轮廓骨相","◇",74,"下颌线略模糊","折叠度一般 -10","侧上方45°柔光"],
+["五官协调","❍",79,"眼鼻唇留白协调","留白略宽 -9","微收下巴"],
+["肤质状态","✧",80,"肤色均匀、微光泽","鼻翼轻反光 -6","避免顶光直射"],
+["气质表现","☺",85,"眼神放松自然","接近参考范围 -0","保持自然微笑"]];
+function bars(ds){return ds.map(d=>`<div class="bar-row"><div class="bt"><b>${d[0]}</b><span>${d[2]} /100</span></div><div class="track"><i style="width:${d[2]}%"></i></div></div>`).join("");}
+function dimcards(ds){return ds.map(d=>`<div class="dim"><div class="h"><div class="nm">${d[1]} ${d[0]}</div><div class="sc">${d[2]}<small style="font-size:9px;color:var(--muted)">/100</small></div></div>
+  <div class="ln"><span class="k">观察：</span>${d[3]}</div><div class="ln"><span class="k">扣分：</span>${d[4]}</div><div class="ln adv"><span class="k">建议：</span>${d[5]}</div></div>`).join("");}
+function reportBody(ds,total,grade,stars,demo){
+  return `<div class="grid">
+    <div class="rpt-left">
+      <div class="pmini"><div class="p"></div></div>
+      <div class="card score"><div class="lab">OVERALL SCORE · 综合总分</div><div class="big">${total}<small> /100</small></div>
+        <div class="stars">${stars}</div><div class="pill">${grade}</div>
+        <div class="qnote">${demo?'演示数据 · 随机生成':'照片质量：高 · 光线均匀、正脸清晰'}</div></div>
+      <div class="card"><div class="sec-t"><span class="ic">▮</span> 分项得分</div>${bars(ds)}</div>
+    </div>
+    <div class="rpt-right">
+      <div class="card"><div class="sec-t"><span class="ic">◈</span> 分项详情</div><div class="dim-grid">${dimcards(ds)}</div></div>
+      <div class="card"><div class="sec-t"><span class="ic">☼</span> 拍照建议</div>
+        <div class="trow"><div class="ti">☀</div><div class="tx"><b>光线</b><span>侧上方45°柔光增加立体感，避免顶光直射</span></div></div>
+        <div class="trow"><div class="ti">◮</div><div class="tx"><b>角度</b><span>镜头略高于眼平线，微收下巴可弱化中庭偏长</span></div></div>
+        <div class="trow"><div class="ti">‿</div><div class="tx"><b>表情</b><span>保持自然放松的微笑，眼神不要过度用力</span></div></div>
+        <div class="trow"><div class="ti">▦</div><div class="tx"><b>构图</b><span>头部居中、双肩水平，面部占画面约2/3</span></div></div></div>
+      <div class="card"><div class="sec-t"><span class="ic">✎</span> 整体点评</div>
+        <div class="comment">${demo?'本结果为<b>演示模式随机评分</b>，未调用真实模型，不代表任何真实面部分析。配置接口后可获得真实分项结果。':'本张照片整体呈现良好：五官协调、对称性佳，气质自然。中庭比例与下颌线清晰度可通过拍摄角度与光线进一步优化。'}</div>
+        <div class="tags"><span class="tag">对称性佳</span><span class="tag">五官协调佳</span><span class="tag">肤质佳</span><span class="tag">气质佳</span></div></div>
+    </div>
+  </div>
+  <div class="ract"><button class="btn soft">↺ 再测一次</button><button class="btn gold">导出结果</button></div>
+  <div class="disc">免责声明：本分析仅基于单张照片的视觉呈现，受光线、角度、镜头畸变影响，不构成对个人价值或绝对颜值的评价，亦非皮肤或医疗诊断。</div>`;
+}
+function report(){return head+`<div class="bd"><div class="rpt-title"><span class="sp">✦</span> AI 颜值分析报告 <span class="sp">✦</span></div>${reportBody(dims,78,'B · 良好','★★★★<span class="off">★</span>',false)}</div>`;}
+function demo(){const rd=dims.map(d=>[d[0],d[1],60+Math.floor(Math.random()*35),d[3],d[4],d[5]]);const t=72;
+  return head+`<div class="bd"><div class="rpt-title"><span class="sp">✦</span> AI 颜值分析报告 <span class="sp">✦</span></div>
+    <div class="demo-badge">⚠ 演示评分 · 非真实结果<small>已跳过接口配置，以下为随机生成的示例分数，仅供界面体验</small></div>
+    ${reportBody(rd,t,'演示 · 随机','★★★<span class="off">★★</span>',true)}</div>`;}
+
+const S={home,cfg,load,report,demo};
+function render(){const s=document.querySelector('#tabs button.on').dataset.s;document.getElementById('P').innerHTML=S[s]();document.getElementById('L').innerHTML=S[s]();}
+document.getElementById('tabs').onclick=e=>{if(e.target.tagName!=='BUTTON')return;document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('on'));e.target.classList.add('on');render();};
+render();
+</script>
+</body>
+</html>

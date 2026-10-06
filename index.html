@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#f6f0e4">
+<title>AI 颜值分析</title>
+<style>
+  :root{
+    --bg:#f6f0e4; --bg2:#efe6d4; --card:#fffdf8; --line:#e7dcc4; --line2:#d9cba9;
+    --ink:#3b3226; --ink2:#6b5f4b; --muted:#9a8c72;
+    --gold:#b08a3e; --gold2:#c9a24b; --gold-soft:#e9d9b0; --good:#5f8a5b; --demo:#b5563f;
+    --serif:Georgia,"Times New Roman","Songti SC","STZhongsong","Noto Serif SC",serif;
+    --sans:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);margin:0;font-family:var(--sans);
+    background-image:radial-gradient(1200px 600px at 80% -10%,#fbf6ec,transparent);
+    display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;padding:calc(14px + var(--safe-t)) 18px 14px;flex:0 0 auto}
+  .brand{font-family:var(--serif);font-size:18px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+  .brand .sp{color:var(--gold2)}
+  .gear{margin-left:auto;background:var(--card);border:1px solid var(--line);color:var(--gold);
+    width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;box-shadow:0 5px 16px rgba(90,70,30,.1)}
+  main{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px calc(28px + var(--safe-b))}
+  .screen{display:none;max-width:1080px;margin:0 auto}
+  .screen.show{display:block}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 22px rgba(90,70,30,.08)}
+  .btn{border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)}
+  .btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;box-shadow:0 6px 18px rgba(176,138,62,.35)}
+  .btn.soft{background:var(--bg2);color:var(--ink)}
+  .btn.line{background:transparent;border:1px solid var(--line2);color:var(--gold)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.wide{width:100%}
+
+  /* ---------- HOME ---------- */
+  .home{max-width:520px;margin:0 auto;text-align:center}
+  .drop{background:var(--card);border:1px dashed var(--line2);border-radius:22px;padding:16px;box-shadow:0 6px 22px rgba(90,70,30,.08);margin-top:6px}
+  .cam{position:relative;border-radius:16px;overflow:hidden;background:#efe7d6}
+  .cam video{width:100%;display:block;aspect-ratio:3/4;object-fit:cover}
+  .cam img{width:100%;display:block;aspect-ratio:auto;height:auto;object-fit:contain}
+  .empty{width:100%;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--muted);position:relative}
+  .empty .ph{width:56%;aspect-ratio:3/4;border-radius:50%/44%;background:radial-gradient(120px 150px at 50% 40%,#e2d3b6,#cdb992);opacity:.7}
+  .guide{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:50%;aspect-ratio:3/4;border:2px solid rgba(176,138,62,.5);border-radius:46%;pointer-events:none}
+  .pickbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;font-size:16px;font-weight:600;padding:14px 40px;border-radius:999px;box-shadow:0 6px 18px rgba(176,138,62,.45);border:none;cursor:pointer}
+  .reselect{position:absolute;right:10px;bottom:10px;background:rgba(59,50,38,.6);color:#fff;font-size:11px;padding:6px 12px;border-radius:999px;border:none;cursor:pointer}
+  .rowbtns{display:flex;gap:12px;margin-top:16px}
+  .tip{font-size:12px;color:var(--muted);line-height:1.7;margin-top:14px}
+
+  /* ---------- REPORT ---------- */
+  .rpt-title{font-family:var(--serif);text-align:center;font-size:22px;letter-spacing:1px;margin:6px 0 14px}
+  .rpt-title .sp{color:var(--gold2)}
+  .demo-badge{display:none;max-width:560px;margin:0 auto 14px;background:var(--demo);color:#fff;text-align:center;
+    font-size:15px;font-weight:700;letter-spacing:1px;padding:10px;border-radius:12px;box-shadow:0 4px 14px rgba(181,86,63,.35)}
+  .demo-badge.show{display:block}
+  .demo-badge small{display:block;font-size:11px;font-weight:400;opacity:.92;margin-top:3px;letter-spacing:0}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  .rpt-left,.rpt-right{display:flex;flex-direction:column;gap:14px}
+  .sec-t{font-family:var(--serif);font-size:15px;letter-spacing:.5px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .sec-t .ic{color:var(--gold2)}
+  .score{text-align:center}
+  .score .lab{font-family:var(--serif);letter-spacing:2px;font-size:11px;color:var(--muted)}
+  .score .big{font-family:var(--serif);font-size:60px;line-height:1;color:var(--gold);margin:6px 0 2px}
+  .score .big small{font-size:18px;color:var(--muted)}
+  .stars{font-size:22px;letter-spacing:3px;color:var(--gold2);margin:4px 0 8px}
+  .stars .off{color:var(--gold-soft)}
+  .pill{display:inline-block;background:var(--bg2);color:var(--gold);border-radius:999px;padding:5px 16px;font-size:13px;font-weight:600}
+  .qnote{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .bars{display:flex;flex-direction:column;gap:14px}
+  .bar-row .bt{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+  .bar-row .bt b{font-family:var(--serif)}
+  .bar-row .bt span{color:var(--muted);font-size:12px}
+  .track{height:9px;background:var(--bg2);border-radius:6px;overflow:hidden}
+  .track i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold2),var(--gold))}
+  .dim-grid{display:grid;grid-template-columns:1fr;gap:12px}
+  .dim{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;display:flex;flex-direction:column}
+  .dim .h{display:flex;justify-content:space-between;align-items:baseline}
+  .dim .h .nm{font-weight:600;font-size:13.5px}
+  .dim .h .sc{font-family:var(--serif);font-size:19px;color:var(--gold)}
+  .dim .h .sc small{font-size:10px;color:var(--muted)}
+  .dim .ln{font-size:12px;line-height:1.6;color:var(--ink2);margin-top:7px}
+  .dim .ln .k{color:var(--gold);font-weight:600}
+  .dim .ln.adv{color:var(--good);margin-top:auto;padding-top:7px}
+  .dim .ln.adv .k{color:var(--good)}
+  .trow{display:flex;gap:12px;padding:9px 0;border-top:1px dashed var(--line)}
+  .trow:first-child{border-top:none}
+  .trow .ti{width:32px;height:32px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 auto}
+  .trow .tx{flex:1;min-width:0}
+  .trow .tx b{display:block;font-size:12px;color:var(--gold);margin-bottom:2px}
+  .trow .tx span{display:block;font-size:12px;color:var(--ink2);line-height:1.6}
+  .comment{font-size:12.5px;line-height:1.7;color:var(--ink2)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .tag{background:var(--bg2);color:var(--gold);border-radius:999px;padding:4px 12px;font-size:11px}
+  .disc{font-size:11px;color:var(--muted);line-height:1.6;margin-top:16px;text-align:center;padding:0 8px}
+  .copyright{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;letter-spacing:.5px}
+  .copyright a{color:var(--gold);text-decoration:none}
+  .ract{display:flex;gap:12px;margin-top:18px}
+  .ract .btn{flex:1}
+  .pmini{border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 6px 22px rgba(90,70,30,.08);background:#efe7d6}
+  .pmini img{width:100%;display:block;object-fit:contain;aspect-ratio:auto;height:auto}
+
+  /* ---------- MODAL ---------- */
+  .mask{position:fixed;inset:0;background:rgba(50,40,20,.42);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .mask.show{display:flex}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(60,45,15,.25);max-height:90vh;overflow:auto}
+  .modal h3{font-family:var(--serif);margin:0 0 4px;font-size:18px}
+  .modal .sub{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;color:var(--ink2);margin-bottom:5px}
+  .field input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:11px;color:var(--ink);padding:11px 12px;font-size:14px}
+  .field input:focus{outline:none;border-color:var(--gold2)}
+  .modal .msg{font-size:12px;min-height:16px;margin-top:6px;line-height:1.5}
+  .modal .msg.ok{color:var(--good)} .modal .msg.err{color:var(--demo)}
+  .mrow{display:flex;gap:10px;margin-top:12px} .mrow .btn{flex:1}
+  .skip{display:block;width:100%;margin-top:10px;background:transparent;border:1px dashed var(--line2);color:var(--muted);border-radius:12px;padding:11px;font-size:12.5px;cursor:pointer}
+  .lock{font-size:11px;color:var(--muted);line-height:1.6;margin-top:12px;background:var(--bg);border-radius:12px;padding:10px 12px}
+
+  /* ---------- LOADING ---------- */
+  .load{position:fixed;inset:0;background:rgba(246,240,228,.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:60;gap:20px}
+  .load.show{display:flex}
+  .spinner{width:60px;height:60px;border-radius:50%;border:4px solid var(--gold-soft);border-top-color:var(--gold);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .scan{width:180px;height:3px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);border-radius:3px;animation:scan 1.4s ease-in-out infinite}
+  @keyframes scan{0%,100%{opacity:.3;transform:scaleX(.6)}50%{opacity:1;transform:scaleX(1)}}
+  .load .lt{font-family:var(--serif);font-size:17px;color:var(--gold);letter-spacing:1px}
+  .load .ls{font-size:12px;color:var(--muted)}
+
+  /* ---------- LANDSCAPE ---------- */
+  @media (orientation:landscape) and (min-width:820px){
+    .grid{grid-template-columns:250px 1fr;align-items:stretch}
+    .rpt-left .pmini{flex:1;display:flex;min-height:0}
+    .rpt-left .pmini img{flex:1;width:100%;height:100%;aspect-ratio:auto;min-height:180px}
+    .rpt-right{justify-content:flex-start}
+    .rpt-right>.card{flex:0 0 auto}
+    .dim-grid{grid-template-columns:1fr 1fr;grid-auto-rows:1fr}
+    .cam video,.empty{aspect-ratio:16/11}
+    .cam img{aspect-ratio:auto;height:auto}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="sp">✦</span> AI 颜值分析 <span class="sp">✦</span></div>
+  <button class="gear" id="gearBtn" title="接口设置">⚙</button>
+</header>
+
+<main>
+  <!-- 主界面 -->
+  <section class="screen show" id="sc-home">
+    <div class="home">
+      <div class="drop">
+        <div class="cam" id="camArea">
+          <div class="empty">
+            <div class="ph"></div>
+            <div class="guide"></div>
+            <button class="pickbtn" id="btnPick">选择</button>
+          </div>
+        </div>
+      </div>
+      <div class="rowbtns"><button class="btn gold wide" id="btnAnalyze" disabled>分析 →</button></div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <div class="tip">点击「选择」调用系统相机拍照或从相册选取。免冠正脸 · 光线均匀 · 无遮挡。照片在本机去除隐私信息后再上传，评分由本地计算。</div>
+      <div class="copyright">© 2026 <a href="https://github.com/yt3000" target="_blank" rel="noopener">yt3000@github</a> · <span class="js-ver"></span></div>
+    </div>
+  </section>
+
+  <!-- 结果报告 -->
+  <section class="screen" id="sc-report">
+    <div class="rpt-title"><span class="sp">✦</span> AI 颜值分析报告 <span class="sp">✦</span></div>
+    <div class="demo-badge" id="demoBadge">⚠ 演示评分 · 非真实结果<small>已跳过接口配置，以下为随机生成的示例分数，仅供界面体验</small></div>
+    <div class="grid">
+      <div class="rpt-left">
+        <div class="pmini"><img id="rptPhoto" alt="照片"></div>
+        <div class="card score">
+          <div class="lab">OVERALL SCORE · 综合总分</div>
+          <div class="big"><span id="totalNum">--</span><small> /100</small></div>
+          <div class="stars" id="stars"></div>
+          <div class="pill" id="gradePill">—</div>
+          <div class="qnote" id="qualityNote"></div>
+        </div>
+        <div class="card"><div class="sec-t"><span class="ic">▮</span> 分项得分</div><div class="bars" id="bars"></div></div>
+      </div>
+      <div class="rpt-right">
+        <div class="card"><div class="sec-t"><span class="ic">◈</span> 分项详情</div><div class="dim-grid" id="dims"></div></div>
+        <div class="card"><div class="sec-t"><span class="ic">☼</span> 拍照建议</div><div id="tipsBox"></div></div>
+        <div class="card"><div class="sec-t"><span class="ic">✎</span> 整体点评</div>
+          <div class="comment" id="comment"></div><div class="tags" id="tags"></div></div>
+      </div>
+    </div>
+    <div class="ract"><button class="btn soft" id="btnAgain">↺ 再测一次</button><button class="btn line" id="btnExport">导出文本</button><button class="btn gold" id="btnImage">保存图片</button></div>
+    <div class="disc">免责声明：本分析仅基于单张照片的视觉呈现，受光线、角度、镜头畸变影响，不构成对个人价值或绝对颜值的评价，亦非皮肤或医疗诊断。</div>
+    <div class="copyright">© 2026 <a href="https://github.com/yt3000" target="_blank" rel="noopener">yt3000@github</a> · <span class="js-ver"></span></div>
+  </section>
+</main>
+
+<!-- 配置弹框 -->
+<div class="mask" id="cfgMask">
+  <div class="modal">
+    <h3>接口设置</h3>
+    <div class="sub">填写 OpenAI 兼容的多模态接口，用于分项打分。</div>
+    <div class="field"><label>API Base URL</label><input id="inBase" placeholder="https://api.openai.com/v1" autocomplete="off"></div>
+    <div class="field"><label>API Key</label><input id="inKey" type="password" placeholder="sk-..." autocomplete="off"></div>
+    <div class="field"><label>模型名称（支持图像输入）</label><input id="inModel" placeholder="gpt-4o-mini" autocomplete="off"></div>
+    <div class="msg" id="cfgMsg"></div>
+    <div class="mrow"><button class="btn soft" id="cfgTest">测试连接</button><button class="btn gold" id="cfgSave">保存</button></div>
+    <button class="skip" id="cfgSkip">跳过 · 体验演示评分（随机结果，非真实）</button>
+    <div class="lock">🔒 URL、Key、模型名仅保存在本机浏览器 localStorage，不上传任何服务器；清除浏览器数据即删除。</div>
+  </div>
+</div>
+
+<!-- 分析动画 -->
+<div class="load" id="loading">
+  <div class="spinner"></div><div class="scan"></div>
+  <div class="lt">正在分析中</div>
+  <div class="ls">去除隐私信息 · 面部六维评估 · 本地汇总</div>
+</div>
+
+<canvas id="workCanvas" style="display:none"></canvas>
+
+<script>
+"use strict";
+const LS={base:'face_api_base_v1',key:'face_api_key_v1',model:'face_api_model_v1',demo:'face_demo_v1'};
+/* 版本号：唯一来源。每次改动按规则递增——修 bug 进补丁位(x.y.Z)，加功能进次版本位(x.Y.0)。 */
+const APP_NAME='FaceAnalysis', APP_VERSION='1.0.0';
+const WEIGHTS={proportion:0.25,symmetry:0.20,contour:0.15,harmony:0.20,skin:0.12,vibe:0.08};
+const DIM_META={
+  proportion:{cn:'面部比例',ic:'◱'}, symmetry:{cn:'对称性',ic:'⇄'},
+  contour:{cn:'轮廓骨相',ic:'◇'}, harmony:{cn:'五官协调',ic:'❍'},
+  skin:{cn:'肤质状态',ic:'✧'}, vibe:{cn:'气质表现',ic:'☺'}
+};
+const SYSTEM_PROMPT=[
+'你是专业的面部美学分析助手。分析用户上传的单张人脸照片，按六个客观维度分项打分。',
+'六个维度（字段名固定）：',
+'1. proportion 面部比例（三庭纵向是否三等分；五眼：眼距/眼长/脸宽是否接近标准）',
+'2. symmetry 对称性（左右眉高差、眼位高低差、嘴角倾斜、下颌角左右差异）',
+'3. contour 轮廓骨相（下颌线清晰度、颧骨突出度、面部折叠度）',
+'4. harmony 五官协调（眼鼻唇相对大小与面部留白比例是否协调，不单独评判某一器官）',
+'5. skin 肤质状态（仅照片中可见的肤色均匀度、光泽、瑕疵；注明这是照片表现而非皮肤诊断）',
+'6. vibe 气质表现（眼神放松度、表情自然度；仅小幅加分参考，不扣分）',
+'评分规则：每维度满分100，从100起按观察到的问题扣分。70-85为普通照片集中区间，90+接近典型审美模板，60以下为明显偏离。照片质量差时如实说明并适当降分。',
+'语言克制、具体、非评判性；用“偏长/偏短/偏宽/偏移/不清晰”等描述词，禁止“丑/差/缺陷/完美”等主观价值词。',
+'每维度输出：score(0-100整数)、observed、deduction_reason、photo_advice。',
+'字数限制（重要）：observed、deduction_reason、photo_advice 每项各不超过20字，只写一句、尽量短，不要举例或展开。deduction_reason 用“X略偏→扣N分”式极简表达。',
+'photography_tips 的 lighting/angle/expression/composition 每项1-2条、每条不超过15字；image_quality.notes 不超过20字。',
+'绝对限制：禁止输出任何总分/最终评价分数（总分由调用方本地计算）；只基于当前这一张照片；所有文字用中文；只输出一个合法JSON，不要markdown代码块、不要多余文字。',
+'输出JSON结构：{"dimensions":{"proportion":{"score":0,"observed":"","deduction_reason":"","photo_advice":""},"symmetry":{...},"contour":{...},"harmony":{...},"skin":{...},"vibe":{...}},"image_quality":{"level":"高/中/低","notes":""},"photography_tips":{"lighting":[],"angle":[],"expression":[],"composition":[],"summary":""}}'
+].join('\n');
+
+let capturedDataURL=null, cleanB64=null, lastResult=null;
+const $=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));$('#'+id).classList.add('show');window.scrollTo(0,0);}
+function esc(s){if(s==null)return'';return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function buildEndpoint(base){let b=(base||'').trim().replace(/\/+$/,'');if(/\/chat\/completions$/i.test(b))return b;if(/\/v\d+$/i.test(b))return b+'/chat/completions';return b+'/v1/chat/completions';}
+function settingsOK(){return !!(localStorage.getItem(LS.base)&&localStorage.getItem(LS.key)&&localStorage.getItem(LS.model));}
+function demoOn(){return localStorage.getItem(LS.demo)==='1';}
+
+/* ---------- 配置弹框 ---------- */
+function openCfg(msg){$('#inBase').value=localStorage.getItem(LS.base)||'';$('#inKey').value=localStorage.getItem(LS.key)||'';$('#inModel').value=localStorage.getItem(LS.model)||'';$('#cfgMsg').textContent=msg||'';$('#cfgMsg').className='msg'+(msg?' err':'');$('#cfgMask').classList.add('show');}
+function closeCfg(){$('#cfgMask').classList.remove('show');}
+function saveCfg(){
+  const b=$('#inBase').value.trim(),k=$('#inKey').value.trim(),m=$('#inModel').value.trim();
+  if(!b||!k||!m){$('#cfgMsg').className='msg err';$('#cfgMsg').textContent='三项都需填写';return;}
+  localStorage.setItem(LS.base,b);localStorage.setItem(LS.key,k);localStorage.setItem(LS.model,m);
+  localStorage.removeItem(LS.demo); // 配置真实接口后退出演示模式
+  $('#cfgMsg').className='msg ok';$('#cfgMsg').textContent='✓ 已保存到本机';setTimeout(closeCfg,600);
+}
+function skipCfg(){localStorage.setItem(LS.demo,'1');closeCfg();}
+async function testCfg(){
+  const m=$('#cfgMsg');m.className='msg';m.textContent='测试中…';
+  const b=$('#inBase').value.trim(),k=$('#inKey').value.trim(),mo=$('#inModel').value.trim();
+  if(!b||!k||!mo){m.className='msg err';m.textContent='请先填写完整';return;}
+  try{
+    const r=await fetch(buildEndpoint(b),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:mo,messages:[{role:'user',content:'ping'}],max_tokens:4})});
+    m.className=r.ok?'msg ok':'msg err';m.textContent=r.ok?'✓ 连接成功':'✗ HTTP '+r.status+'：'+(await r.text()).slice(0,140);
+  }catch(e){m.className='msg err';m.textContent='✗ 网络/跨域错误：'+e.message;}
+}
+
+/* ---------- 选择照片（系统相机/相册） ---------- */
+function pickPhoto(){$('#fileInput').value='';$('#fileInput').click();}
+function onFile(e){
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const img=new Image();const url=URL.createObjectURL(f);
+  img.onload=()=>{
+    const c=$('#workCanvas');const mx=1280;let w=img.width,h=img.height;
+    if(Math.max(w,h)>mx){const s=mx/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+    c.width=w;c.height=h;const ctx=c.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h); // 先铺白底，避免 PNG 透明区在 JPEG 下变黑
+    ctx.drawImage(img,0,0,w,h);
+    URL.revokeObjectURL(url);
+    usePreview(c.toDataURL('image/jpeg',0.92));
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);alert('图片读取失败');};
+  img.src=url;
+}
+function usePreview(d){
+  capturedDataURL=d;
+  $('#camArea').innerHTML='<img id="previewImg" alt="预览"><button class="reselect" id="btnReselect">点击重选</button>';
+  $('#previewImg').src=d;$('#btnReselect').onclick=pickPhoto;
+  $('#btnAnalyze').disabled=false;
+}
+function resetHome(){
+  capturedDataURL=null;
+  $('#camArea').innerHTML='<div class="empty"><div class="ph"></div><div class="guide"></div><button class="pickbtn" id="btnPick">选择</button></div>';
+  $('#btnPick').onclick=pickPhoto;$('#btnAnalyze').disabled=true;
+}
+
+/* ---------- 去隐私（重绘剥离 EXIF/GPS/时间戳） ---------- */
+function stripMetadata(d){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const c=$('#workCanvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0);res(c.toDataURL('image/jpeg',0.9));};img.onerror=rej;img.src=d;});}
+
+/* ---------- 分析 ---------- */
+async function analyze(){
+  if(!capturedDataURL)return;
+  if(demoOn()){ // 演示模式：本地随机评分，不调用接口
+    $('#loading').classList.add('show');
+    try{ await sleep(1100); lastResult=makeDemoResult(); renderReport(lastResult); $('#rptPhoto').src=capturedDataURL; show('sc-report'); }
+    finally{ $('#loading').classList.remove('show'); }
+    return;
+  }
+  if(!settingsOK()){openCfg('请先配置接口，或点“跳过”体验演示评分');return;}
+  $('#loading').classList.add('show');
+  try{
+    cleanB64=await stripMetadata(capturedDataURL);
+    let parsed=null,lastErr=null;
+    for(let i=0;i<2;i++){ // 模型偶发返回不合规 JSON 时自动重试一次
+      try{const raw=await callVision(cleanB64);parsed=parseJSON(raw);break;}
+      catch(e){lastErr=e;await sleep(300);}
+    }
+    if(!parsed)throw lastErr||new Error('解析失败');
+    lastResult=computeTotal(parsed);lastResult.demo=false;
+    await sleep(400);
+    renderReport(lastResult); $('#rptPhoto').src=capturedDataURL; show('sc-report');
+  }catch(e){alert('分析失败：'+(e.message||e));}
+  finally{$('#loading').classList.remove('show');}
+}
+async function callVision(d){
+  const b=localStorage.getItem(LS.base),k=localStorage.getItem(LS.key),mo=localStorage.getItem(LS.model);
+  const body={model:mo,temperature:0.3,messages:[{role:'system',content:SYSTEM_PROMPT},
+    {role:'user',content:[{type:'text',text:'请分析这张人脸照片，严格按系统要求只输出六维分项JSON，不要输出总分。'},{type:'image_url',image_url:{url:d}}]}]};
+  const r=await fetch(buildEndpoint(b),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error('接口 HTTP '+r.status+'：'+(await r.text()).slice(0,180));
+  const data=await r.json();const c=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+  if(!c)throw new Error('接口未返回内容');return typeof c==='string'?c:JSON.stringify(c);
+}
+function parseJSON(t){t=t.trim().replace(/^```(json)?/i,'').replace(/```$/,'').trim();const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<0)throw new Error('模型未返回有效JSON');let s=t.slice(a,b+1).replace(/,\s*([}\]])/g,'$1');return JSON.parse(s);}
+
+/* ---------- 本地汇总 ---------- */
+function computeTotal(json){
+  const dims=(json&&json.dimensions)||{};let sum=0,ws=0;const out={};
+  for(const k in WEIGHTS){const d=dims[k]||{};let s=parseInt(d.score,10);if(isNaN(s))s=0;s=Math.max(0,Math.min(100,s));out[k]=Object.assign({},d,{score:s});sum+=s*WEIGHTS[k];ws+=WEIGHTS[k];}
+  const total=Math.round(sum/(ws||1));
+  const g=total>=85?['S','卓越']:total>=75?['A','优秀']:total>=65?['B','良好']:total>=55?['C','一般']:['D','有待提升'];
+  return{dimensions:out,total,gl:g[0],gn:g[1],image_quality:json.image_quality||{},photography_tips:json.photography_tips||{}};
+}
+
+/* ---------- 演示随机评分 ---------- */
+const DEMO_POOL={
+  proportion:[['中庭略长，眼距适中','中庭偏长→扣N分','镜头略抬高并微收下巴'],
+    ['上庭饱满，下庭偏短','下庭偏短→扣N分','平视镜头，露出下巴'],
+    ['三庭均衡，眼距标准','接近参考→扣N分','正面平视，头部水平']],
+  symmetry:[['眉高基本一致','嘴角轻微不对称→扣N分','正对镜头，双肩水平'],
+    ['眼位轻微高低差','嘴角倾斜→扣N分','微笑时两侧均匀用力'],
+    ['左右脸较对称','轻微偏移→扣N分','保持正面，避免侧头']],
+  contour:[['下颌线偏软','折叠度偏弱→扣N分','侧上方45°柔光'],
+    ['颧骨平缓','正面略宽→扣N分','略前伸并收下巴'],
+    ['轮廓较流畅','局部不够清晰→扣N分','避免顶光直射']],
+  harmony:[['眼鼻唇较协调','留白略宽→扣N分','面部占画面约2/3'],
+    ['五官分布舒展','某器官偏大→扣N分','自然表情，避免夸张'],
+    ['五官比例和谐','轻微失衡→扣N分','保持放松对称的表情']],
+  skin:[['肤色均匀，微反光','T区反光→扣N分','使用柔光，避免强光'],
+    ['肤质细腻','局部不均→扣N分','均匀正面光减少阴影'],
+    ['肤色略不均','局部色差→扣N分','柔和均匀的光线']],
+  vibe:[['眼神放松自然','幅度略大→扣N分','保持自然微笑'],
+    ['表情略紧绷','眼神用力→扣N分','深呼吸放松眼周'],
+    ['神态亲和','接近参考→不扣分','直视镜头，表情舒展']],
+  tips:{lighting:['侧上方45°柔光','避免顶光直射'],
+    angle:['镜头略高于眼平线','正对镜头双肩水平'],
+    expression:['保持自然放松微笑','拍摄前放松眼周'],
+    composition:['面部占画面约2/3','免冠无遮挡背景简洁']},
+  quality:['照片质量：中 · 演示数据','演示模式未做真实质量评估']
+};
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function makeDemoResult(){
+  const dims={};
+  for(const k in WEIGHTS){const o=pick(DEMO_POOL[k]);const s=58+Math.floor(Math.random()*35);
+    dims[k]={score:s,observed:o[0],deduction_reason:o[1].replace('N',Math.max(0,100-s)),photo_advice:o[2]};}
+  const json={dimensions:dims,image_quality:{level:'中',notes:pick(DEMO_POOL.quality)},
+    photography_tips:{lighting:DEMO_POOL.tips.lighting,angle:DEMO_POOL.tips.angle,expression:DEMO_POOL.tips.expression,composition:DEMO_POOL.tips.composition,summary:'演示模式：配置真实接口后可获得针对你照片的分项建议。'}};
+  const r=computeTotal(json); r.demo=true; r.gl='演示'; r.gn='随机'; return r;
+}
+
+/* ---------- 渲染报告 ---------- */
+function renderReport(r){
+  $('#demoBadge').classList.toggle('show',!!r.demo);
+  $('#totalNum').textContent=r.total;
+  const n=Math.max(0,Math.min(5,Math.round(r.total/20)));
+  $('#stars').innerHTML='★★★★★'.split('').map((s,i)=>i<n?s:'<span class="off">★</span>').join('');
+  $('#gradePill').textContent=r.gl+' · '+r.gn;
+  const iq=r.image_quality||{};
+  $('#qualityNote').textContent=r.demo?'演示数据 · 随机生成，非真实评分':(iq.level?('照片质量：'+iq.level+(iq.notes?' · '+iq.notes:'')):'');
+  $('#bars').innerHTML=Object.keys(WEIGHTS).map(k=>{const d=r.dimensions[k];return '<div class="bar-row"><div class="bt"><b>'+DIM_META[k].cn+'</b><span>'+d.score+' /100</span></div><div class="track"><i style="width:'+d.score+'%"></i></div></div>';}).join('');
+  $('#dims').innerHTML=Object.keys(WEIGHTS).map(k=>{const d=r.dimensions[k],m=DIM_META[k];
+    return '<div class="dim"><div class="h"><div class="nm">'+m.ic+' '+m.cn+'</div><div class="sc">'+d.score+'<small>/100</small></div></div>'+
+      '<div class="ln"><span class="k">观察：</span>'+(esc(d.observed)||'—')+'</div>'+
+      '<div class="ln"><span class="k">扣分：</span>'+(esc(d.deduction_reason)||'—')+'</div>'+
+      '<div class="ln adv"><span class="k">建议：</span>'+(esc(d.photo_advice)||'—')+'</div></div>';}).join('');
+  const t=r.photography_tips||{};const rows=[['☀','光线',t.lighting],['◮','角度',t.angle],['‿','表情',t.expression],['▦','构图',t.composition]];
+  let tb=rows.map(x=>{const arr=Array.isArray(x[2])?x[2]:(x[2]?[x[2]]:[]);return arr.length?'<div class="trow"><div class="ti">'+x[0]+'</div><div class="tx"><b>'+x[1]+'</b><span>'+arr.map(esc).join('；')+'</span></div></div>':'';}).join('');
+  if(t.summary)tb+='<div class="trow"><div class="ti">✦</div><div class="tx"><b>核心建议</b><span>'+esc(t.summary)+'</span></div></div>';
+  $('#tipsBox').innerHTML=tb||'<div class="comment">暂无特定拍照建议。</div>';
+  $('#comment').innerHTML=r.demo?'本结果为<b>演示模式随机评分</b>，未调用真实模型，不代表任何真实面部分析。':(iq.notes?('整体呈现：'+esc(iq.notes)+'。'):'本分析基于当前照片的六维呈现。');
+  const tags=Object.keys(WEIGHTS).filter(k=>r.dimensions[k].score>=80).map(k=>DIM_META[k].cn+'佳');
+  $('#tags').innerHTML=tags.length?tags.map(x=>'<span class="tag">'+x+'</span>').join(''):'<span class="tag">继续探索你的风格</span>';
+}
+
+/* ---------- 导出 ---------- */
+function exportResult(){if(!lastResult)return;const r=lastResult;
+  let txt='AI 颜值分析报告  ('+APP_NAME+' v'+APP_VERSION+')'+(r.demo?'\n【演示模式 · 随机评分 · 非真实结果】':'')+'\n综合总分（本地加权）：'+r.total+'  评级：'+r.gl+' · '+r.gn+'\n\n';
+  Object.keys(WEIGHTS).forEach(k=>{const d=r.dimensions[k],m=DIM_META[k];txt+='['+m.cn+'] '+d.score+'\n  观察：'+(d.observed||'')+'\n  扣分：'+(d.deduction_reason||'')+'\n  建议：'+(d.photo_advice||'')+'\n\n';});
+  const t=r.photography_tips||{};txt+='拍照建议：\n'+[t.lighting,t.angle,t.expression,t.composition].filter(Boolean).map(a=>Array.isArray(a)?a.join('；'):a).join('\n')+'\n'+(t.summary||'');
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(r.demo?'演示_':'')+'颜值分析报告_'+r.total+'分_v'+APP_VERSION+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+
+/* ---------- 导出页面截图（html2canvas，本地文件加载，离线可用） ---------- */
+function loadH2C(){return new Promise((res,rej)=>{
+  if(window.html2canvas)return res();
+  const s=document.createElement('script');s.src='html2canvas.min.js';s.async=true;
+  s.onload=()=>window.html2canvas?res():rej(new Error('html2canvas 未就绪'));
+  s.onerror=()=>rej(new Error('本地 html2canvas.min.js 未找到（需与 index.html 同目录）'));
+  document.head.appendChild(s);});}
+async function exportImage(){
+  if(!lastResult)return;
+  const btn=$('#btnImage'),old=btn.textContent;btn.disabled=true;btn.textContent='生成中…';
+  try{
+    await loadH2C();
+    const node=$('#sc-report');
+    const canvas=await window.html2canvas(node,{backgroundColor:'#f6f0e4',scale:2,useCORS:true,logging:false,
+      ignoreElements:el=>el.classList&&el.classList.contains('ract'),
+      windowWidth:node.scrollWidth,windowHeight:node.scrollHeight});
+    const url=canvas.toDataURL('image/png');
+    const a=document.createElement('a');a.href=url;a.download=(lastResult.demo?'演示_':'')+'颜值分析报告_'+lastResult.total+'分_v'+APP_VERSION+'.png';a.click();
+  }catch(e){alert('截图不可用（'+(e.message||e)+'），已改为导出文本。');exportResult();}
+  finally{btn.disabled=false;btn.textContent=old;}
+}
+
+/* ---------- 事件 ---------- */
+$('#gearBtn').onclick=()=>openCfg();
+$('#btnPick').onclick=pickPhoto;
+$('#fileInput').onchange=onFile;
+$('#btnAnalyze').onclick=analyze;
+$('#btnAgain').onclick=()=>{resetHome();show('sc-home');};
+$('#btnExport').onclick=exportResult;
+$('#btnImage').onclick=exportImage;
+$('#cfgTest').onclick=testCfg;
+$('#cfgSave').onclick=saveCfg;
+$('#cfgSkip').onclick=skipCfg;
+$('#cfgMask').onclick=e=>{if(e.target.id==='cfgMask')closeCfg();};
+
+document.querySelectorAll('.js-ver').forEach(e=>e.textContent=APP_NAME+' v'+APP_VERSION);
+if(!settingsOK()&&!demoOn()){setTimeout(()=>openCfg('首次使用：配置接口后开始，或点“跳过”体验演示评分'),450);}
+</script>
+</body>
+</html>
